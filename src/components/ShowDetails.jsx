@@ -6,18 +6,26 @@ function ShowDetails() {
   const [show, setShow] = useState(null);
   const [cast, setCast] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch(`https://api.tvmaze.com/shows/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setShow(data);
+      })
+      .catch(() => {
+        setError("Failed to load show details");
+        setLoading(false);
       });
 
     fetch(`https://api.tvmaze.com/shows/${id}/cast`)
       .then((res) => res.json())
       .then((data) => {
         setCast(data);
+        setLoading(false);
+      })
+      .catch(() => {
         setLoading(false);
       });
   }, [id]);
@@ -26,8 +34,8 @@ function ShowDetails() {
     return <h2>Loading...</h2>;
   }
 
-  if (!show) {
-    return <h2>Show Not Found</h2>;
+  if (error || !show) {
+    return <h2>{error || "Show Not Found"}</h2>;
   }
 
   let cleanSummary = "";

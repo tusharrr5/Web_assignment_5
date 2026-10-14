@@ -9,12 +9,17 @@ function Shows() {
   const [genre, setGenre] = useState("all");
   const [sort, setSort] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch("https://api.tvmaze.com/shows?page=0")
       .then((res) => res.json())
       .then((data) => {
         setShows(data.slice(0, 40));
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to load shows. Please try again.");
         setLoading(false);
       });
   }, []);
@@ -47,6 +52,10 @@ function Shows() {
 
   if (loading) {
     return <h2>Loading...</h2>;
+  }
+
+  if (error) {
+    return <h2>{error}</h2>;
   }
 
   return (
