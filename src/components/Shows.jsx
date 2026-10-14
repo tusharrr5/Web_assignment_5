@@ -11,66 +11,27 @@ function Shows() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch initial 40 shows on mount
   useEffect(() => {
-    loadShows();
-  }, []);
-
-  function loadShows() {
-    setLoading(true);
-    setError(null);
     fetch("https://api.tvmaze.com/shows?page=0")
       .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch shows from TVMaze");
-        }
+        if (!res.ok) throw new Error("Failed to fetch shows");
         return res.json();
       })
       .then((data) => {
-        // Tip: /shows?page=0 returns 250 shows; use .slice(0, 40)
         setShows(data.slice(0, 40));
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.message || "Failed to load shows");
+        setError(err.message);
         setLoading(false);
       });
-  }
+  }, []);
 
-  // Bonus: Search all shows with https://api.tvmaze.com/search/shows?q=:query
-  function handleSearchSubmit(e) {
-    if (e) e.preventDefault();
-    if (!search.trim()) {
-      loadShows();
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(search.trim())}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Search failed, please try again");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        // Each item is { score, show }
-        const searchResults = data.map((item) => item.show);
-        setShows(searchResults);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || "Error searching shows");
-        setLoading(false);
-      });
-  }
-
-  // Controlled input filter
   let result = shows.filter((show) => {
-    const matchesSearch = show.name.toLowerCase().includes(search.toLowerCase());
-    const matchesGenre = genre === "all" || (show.genres && show.genres.includes(genre));
-    return matchesSearch && matchesGenre;
+    return (
+      show.name.toLowerCase().includes(search.toLowerCase()) &&
+      (genre === "all" || (show.genres && show.genres.includes(genre)))
+    );
   });
 
   if (sort === "rating-high") {
@@ -82,58 +43,22 @@ function Shows() {
   if (sort === "name-asc") {
     result.sort((a, b) => a.name.localeCompare(b.name));
   }
-  if (sort === "name-desc") {
-    result.sort((a, b) => b.name.localeCompare(a.name));
-  }
+
+  if (loading) return <h2 style={{ textAlign: "center" }}>Loading shows...</h2>;
+  if (error) return <h2 style={{ textAlign: "center", color: "red" }}>{error}</h2>;
 
   return (
     <div className="container">
       <h1>Browse TV Shows</h1>
 
-      <form className="controls-form" onSubmit={handleSearchSubmit}>
+      <div className="controls">
         <SearchBar search={search} setSearch={setSearch} />
-
-        <button type="submit" className="search-btn">
-          Search All
-        </button>
-
-        {search && (
-          <button
-            type="button"
-            className="reset-btn"
-            onClick={() => {
-              setSearch("");
-              loadShows();
-            }}
-          >
-            Reset
-          </button>
-        )}
-
-        <Filters
-          genre={genre}
-          setGenre={setGenre}
-          sort={sort}
-          setSort={setSort}
-        />
-      </form>
-
-      <div className="shows-header">
-        <h3>Total Shows: {result.length}</h3>
+        <Filters genre={genre} setGenre={setGenre} sort={sort} setSort={setSort} />
       </div>
 
-      {loading && <h2>Loading shows...</h2>}
+      <h3>Total Shows: {result.length}</h3>
 
-      {error && (
-        <div className="error-box">
-          <p>⚠️ {error}</p>
-          <button onClick={loadShows} className="retry-btn">
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && <ShowList shows={result} />}
+      <ShowList shows={result} />
     </div>
   );
 }
