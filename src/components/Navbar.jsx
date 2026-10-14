@@ -6,7 +6,7 @@ function Navbar() {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="logo">
-          📺 ShowTime
+          ShowTime
         </Link>
         <div className="nav-links">
           <Link to="/">Home</Link>
